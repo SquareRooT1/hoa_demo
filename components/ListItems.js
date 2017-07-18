@@ -1,6 +1,7 @@
 import React , {Component} from 'react';
 import {ScrollView ,View,Text} from 'react-native';
 import  {Button, Input, Spinner} from './common';
+import data from './data/data.json'
 import Item from './Item';
 import axios from 'axios';
 const _ = require('lodash');
@@ -9,12 +10,12 @@ export default class ListItems extends Component {
 
     state = {
       items:[],
-      data: [],
       direction : null,
       isLoading : null
     };
 
     componentWillMount(){
+
       this._fetchItems();
     }
 
@@ -22,10 +23,12 @@ export default class ListItems extends Component {
       this.setState({
         isLoading : true
       });
-      axios.get('http://jsonplaceholder.typicode.com/albums/1/photos')
-          .then((res) => {
-            this.setState({items : res.data, data :res.data, isLoading : false});
-          });
+      if(data){
+        this.setState({
+          items: data,
+          isLoading : false
+        })
+      }
     }
 
     _renderItems(){
@@ -38,12 +41,12 @@ export default class ListItems extends Component {
     _reRenderItems(){
       if(this.state.direction == 'desc'){
         this.setState({
-          items: _.orderBy(this.state.items, ['id'],['asc']),
+          items: _.orderBy(this.state.items, ['buyPrice'],['asc']),
           direction : 'asc'
         });
       }else{
         this.setState({
-          items: _.orderBy(this.state.items, ['id'],['desc']),
+          items: _.orderBy(this.state.items, ['buyPrice'],['desc']),
           direction : 'desc'
         });
       }
@@ -55,16 +58,20 @@ export default class ListItems extends Component {
       let itemsArr = [];
         if(text == null){
             this.setState({
-              items: this.state.data
+              items: data
             })
         }
-      this.state.data.forEach((item) => {
-          if(item.title.indexOf(text) > -1){
+        this.setState({
+          isLoading : true
+        })
+        data.forEach((item) => {
+          if(item.title.toLowerCase().indexOf(text) > -1){
             itemsArr.push(item);
           }
       })
       this.setState({
-        items : itemsArr
+        items : itemsArr,
+        isLoading : false
       })
     }
 
@@ -77,14 +84,14 @@ export default class ListItems extends Component {
       )
     }else{
       return(
-          <ScrollView>
-            <Button onPress={() => this._reRenderItems()}> {this.state.direction == 'desc' ? 'Azalan sırayla göster': 'Artan sırayla göster'} </Button>
+          <ScrollView >
+            <Button onPress={() => this._reRenderItems()}> {this.state.direction == 'desc' ? 'Azalan fiyatla göster': 'Artan fiyatla göster'} </Button>
             <Input
-              label = "Search"
-              placeholder = "Enter text for filter"
+              label = "Ürün Ara :"
+              placeholder = "Aranacak Kelimeyi giriniz"
               onChangeText = {this.onFilterTextChange.bind(this)}
             />
-            {this.state.items.length > 0 ? this._renderItems() : <Text style={styles.mutedText}> No Item Found </Text>}
+            {this.state.items.length > 0 ? this._renderItems() : <Text style={styles.mutedText}> Ürün Bulunamadı </Text>}
           </ScrollView>
       );
     }
